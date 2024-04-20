@@ -43,12 +43,14 @@ func getAllLinks(url string) []string {
 	return links
 }
 
-func DLS(currentURL string, targetURL string, limit int) bool {
+func DLS(currentURL string, targetURL string, limit int, result *[]string) bool {
+	*result = append(*result, currentURL)
 	if currentURL == targetURL {
 		return true
 	}
 
-	if limit < 0 {
+	if limit <= 1 {
+		*result = (*result)[:len(*result)-1]
 		return false
 	}
 
@@ -56,16 +58,18 @@ func DLS(currentURL string, targetURL string, limit int) bool {
 
 	for _, link := range links {
 		fmt.Println("Cek link", link, "di level", limit)
-		if DLS(link, targetURL, limit-1) {
+		if DLS(link, targetURL, limit-1, result) {
 			return true
 		}
 	}
+	*result = (*result)[:len(*result)-1]
 	return false
 }
 
-func IDS(startURL string, targetURL string, maxDepth int) bool {
+func IDS(startURL string, targetURL string, maxDepth int, result *[]string) bool {
+	*result = []string{}
 	for i := 0; i <= maxDepth; i++ {
-		if DLS(startURL, targetURL, i) {
+		if DLS(startURL, targetURL, i, result) {
 			return true
 		}
 	}
@@ -74,11 +78,15 @@ func IDS(startURL string, targetURL string, maxDepth int) bool {
 
 func main() {
 	startURL := "https://en.wikipedia.org/wiki/Russia"
-	targetURL := "https://en.wikipedia.org/wiki/Indonesia"
+	targetURL := "https://en.wikipedia.org/wiki/Joko_Widodo"
 	i := 1
 	for {
-		if IDS(startURL, targetURL, i) {
-			fmt.Println("Berhasil")
+		result := make([]string, 0)
+		if IDS(startURL, targetURL, i, &result) {
+			fmt.Println("Berhasil dengan array", len(result))
+			for _, r := range result {
+				fmt.Println(r)
+			}
 			break
 		} else {
 			fmt.Println("Belum ada di level", i)
