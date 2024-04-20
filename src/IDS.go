@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gocolly/colly/v2"
 	"strings"
+	"time"
 )
 
 type Map struct {
@@ -57,7 +58,7 @@ func DLS(currentURL string, targetURL string, limit int, result *[]string) bool 
 	links := getAllLinks(currentURL)
 
 	for _, link := range links {
-		fmt.Println("Cek link", link, "di level", limit)
+		//fmt.Println("Cek link", link, "di level", limit)
 		if DLS(link, targetURL, limit-1, result) {
 			return true
 		}
@@ -77,6 +78,7 @@ func IDS(startURL string, targetURL string, maxDepth int, result *[]string) bool
 }
 
 func main() {
+	start := time.Now()
 	startURL := "https://en.wikipedia.org/wiki/Russia"
 	targetURL := "https://en.wikipedia.org/wiki/Joko_Widodo"
 	i := 1
@@ -89,9 +91,11 @@ func main() {
 			}
 			break
 		} else {
-			fmt.Println("Belum ada di level", i)
+			//fmt.Println("Belum ada di level", i)
 			i++
 		}
 	}
+	end := time.Now()
+	fmt.Println("Waktu eksekusi", end.Sub(start))
 
 }
