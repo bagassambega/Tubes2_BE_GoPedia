@@ -24,6 +24,7 @@ func checkIgnoredLink(url string) bool {
 }
 
 func getAllLinks(url string) []string {
+	//c := colly.NewCollector(colly.CacheDir("./cache"))
 	c := colly.NewCollector()
 
 	// Inisialisasi array
@@ -77,6 +78,7 @@ func DLS(currentURL string, targetURL string, limit int, result *[]string, numOf
 	}
 
 	links := cacheLinks(currentURL)
+	//links := getAllLinks(currentURL)
 
 	for _, link := range links {
 		//fmt.Println("Cek link", link, "di level", limit)
@@ -138,4 +140,8 @@ func main() {
 	if err != nil {
 		return
 	}
+	//err = os.Remove("./cache")
+	//if err != nil {
+	//	fmt.Println("Error removing cache")
+	//}
 }
