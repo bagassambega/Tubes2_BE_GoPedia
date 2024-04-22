@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gocolly/colly/v2"
+	"net/http"
 	"strings"
-	"sync"
 	"time"
 )
 
 // Global variables
 var linkCache = make(map[string][]string)
-var cacheMutex = sync.RWMutex{}
 
 // Jika mengandung salah satu dari identifier seperti File: pada URL, return true
 func checkIgnoredLink(url string) bool {
@@ -45,10 +44,15 @@ func getAllLinks(url string) []string {
 	return links
 }
 
+func convertToLink(name string) string {
+	if strings.Contains(name, " ") {
+		return strings.ReplaceAll(name, " ", "_")
+	}
+	return name
+}
+
 func cacheLinks(url string) []string {
-	cacheMutex.RLock()
 	links, exists := linkCache[url]
-	cacheMutex.RUnlock()
 
 	if exists {
 		//fmt.Println("Menggunakan cache untuk", url)
@@ -56,9 +60,7 @@ func cacheLinks(url string) []string {
 	}
 
 	links = getAllLinks(url)
-	cacheMutex.Lock()
 	linkCache[url] = links
-	cacheMutex.Unlock()
 	return links
 }
 
@@ -87,49 +89,52 @@ func DLS(currentURL string, targetURL string, limit int, result *[]string, numOf
 }
 
 func IDS(startURL string, targetURL string, maxDepth int, result *[]string, numOfArticles *int) bool {
-	*result = []string{}
-	for i := 0; i <= maxDepth; i++ {
+	i := 0
+	for {
 		if DLS(startURL, targetURL, i, result, numOfArticles) {
 			return true
 		}
+		fmt.Println(i)
+		i++
+		if i == maxDepth {
+			return false // Safe condition only
+		}
 	}
-	return false
 }
 
 func main() {
-	start := time.Now()
-	startURL := "https://en.wikipedia.org/wiki/Russia"
-	targetURL := "https://en.wikipedia.org/wiki/Joko_Widodo"
-	i := 1
-	numOfArticles := 0
-	fmt.Println("Start URL", startURL)
-	result := make([]string, 0)
-	for {
-		result = []string{}
-		if IDS(startURL, targetURL, i, &result, &numOfArticles) {
-			fmt.Println("Berhasil dengan array", len(result))
-			for _, r := range result {
-				fmt.Println(r)
-			}
-			fmt.Println("Jumlah artikel yang dikunjungi", numOfArticles)
-			break
-		} else {
-			fmt.Println("Belum ada di level", i)
-			i++
-		}
-	}
-	end := time.Now()
-	fmt.Println("Waktu eksekusi", end.Sub(start))
-
 	router := gin.Default()
 	router.GET("/IDS", func(c *gin.Context) {
-		c.JSON(200, gin.H{
+		source := c.Query("source")
+		target := c.Query("target")
+		fmt.Println("Source", source, "Target", target)
+		var startURL, targetURL string
+		startURL = "https://en.wikipedia.org/wiki/" + source
+		targetURL = "https://en.wikipedia.org/wiki/" + target
+		fmt.Println("Start URL", startURL)
+
+		start := time.Now()
+		numOfArticles := 0
+		result := make([]string, 0)
+		var elapsedTime time.Duration
+		var end time.Time
+		if IDS(startURL, targetURL, 15, &result, &numOfArticles) {
+			end = time.Now()
+			elapsedTime = end.Sub(start)
+			fmt.Println("Waktu eksekusi", end.Sub(start))
+			for i, r := range result {
+				fmt.Printf("Link ke %d: %s\n", i, r)
+			}
+		}
+
+		c.JSON(http.StatusOK, gin.H{
 			"numOfArticles": numOfArticles,
 			"result":        result,
 			"length":        len(result),
+			"elapsedTime":   elapsedTime,
 		})
 	})
-	err := router.Run("localhost:8080")
+	err := router.Run(":8080")
 	if err != nil {
 		return
 	}
