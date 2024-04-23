@@ -41,7 +41,7 @@ func main() {
 				"numOfArticles": numOfArticles,
 				"result":        result,
 				"length":        len(result),
-				"elapsedTime":   elapsedTime,
+				"elapsedTime":   elapsedTime.String(),
 			})
 
 		} else { // BFS

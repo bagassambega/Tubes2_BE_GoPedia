@@ -41,7 +41,7 @@ func getAllLinks(url string) []string {
 	err := c.Visit(url)
 	if err != nil {
 		return nil
-	}
+	}	
 	return links
 }
 
