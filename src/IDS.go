@@ -91,7 +91,7 @@ func DLS(currentURL string, targetURL string, limit int, result *[]string, numOf
 }
 
 func IDS(startURL string, targetURL string, maxDepth int, result *[]string, numOfArticles *int) bool {
-	i := 0
+	i := 1
 	for {
 		if DLS(startURL, targetURL, i, result, numOfArticles) {
 			return true
@@ -104,7 +104,7 @@ func IDS(startURL string, targetURL string, maxDepth int, result *[]string, numO
 	}
 }
 
-func main() {
+func b() {
 	router := gin.Default()
 	router.GET("/IDS", func(c *gin.Context) {
 		source := c.Query("source")
