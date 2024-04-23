@@ -9,7 +9,7 @@ import (
 
 func main() {
 	router := gin.Default()
-	// Format URL: http://localhost:8080/gopedia/?method=BFS&source=source&target=target
+	// Format URL: http://localhost:8080/gopedia?method=BFS&source=source&target=target
 	router.GET("gopedia/", func(c *gin.Context) {
 		// Ambil metode dulu apakah BFS atau IDS
 		method := c.Query("method")

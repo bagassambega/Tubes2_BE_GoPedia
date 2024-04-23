@@ -174,13 +174,15 @@ func BFS(start string, goal string, history *map[string]string, elapsed *time.Du
 	}
 
 	if found {
-		mutex.Lock()
 		key := goal
 		for key != start {
+			mutex.Lock()
 			fmt.Println((*history)[key])
+			mutex.Unlock()
+			mutex.Lock()
 			key = (*history)[key]
+			mutex.Unlock()
 		}
-		mutex.Unlock()
 		fmt.Println(key)
 	} else {
 		fmt.Println("Goal not found")

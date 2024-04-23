@@ -13,3 +13,6 @@ RUN go build -o backend .
 EXPOSE 8080
 
 CMD ["./backend"]
+
+# docker build -t gopedia-backend .
+# docker run gopedia-backend

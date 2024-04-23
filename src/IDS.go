@@ -45,12 +45,6 @@ func getAllLinks(url string) []string {
 	return links
 }
 
-func convertToLink(name string) string {
-	if strings.Contains(name, " ") {
-		return strings.ReplaceAll(name, " ", "_")
-	}
-	return name
-}
 
 func cacheLinks(url string) []string {
 	links, exists := linkCache[url]
@@ -64,6 +58,7 @@ func cacheLinks(url string) []string {
 	linkCache[url] = links
 	return links
 }
+
 
 func DLS(currentURL string, targetURL string, limit int, result *[]string, numOfArticles *int) bool {
 	*numOfArticles++
@@ -104,7 +99,8 @@ func IDS(startURL string, targetURL string, maxDepth int, result *[]string, numO
 	}
 }
 
-func b() {
+// Not used
+func callIDS() {
 	router := gin.Default()
 	router.GET("/IDS", func(c *gin.Context) {
 		source := c.Query("source")
