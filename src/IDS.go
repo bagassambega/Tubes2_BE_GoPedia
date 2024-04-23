@@ -6,11 +6,14 @@ import (
 	"github.com/gocolly/colly/v2"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
 // Global variables
 var linkCache = make(map[string][]string)
+var cacheMutex = &sync.Mutex{}
+var sharedMutex = &sync.Mutex{}
 
 // Jika mengandung salah satu dari identifier seperti File: pada URL, return true
 func checkIgnoredLink(url string) bool {
@@ -41,13 +44,14 @@ func getAllLinks(url string) []string {
 	err := c.Visit(url)
 	if err != nil {
 		return nil
-	}	
+	}
 	return links
 }
 
-
 func cacheLinks(url string) []string {
+	cacheMutex.Lock()
 	links, exists := linkCache[url]
+	cacheMutex.Unlock()
 
 	if exists {
 		//fmt.Println("Menggunakan cache untuk", url)
@@ -55,20 +59,28 @@ func cacheLinks(url string) []string {
 	}
 
 	links = getAllLinks(url)
+
+	cacheMutex.Lock()
 	linkCache[url] = links
+	cacheMutex.Unlock()
 	return links
 }
 
+func DLS(currentURL string, targetURL string, limit int, result *[]string, numOfArticles *int, wg *sync.WaitGroup) bool {
+	defer wg.Done()
 
-func DLS(currentURL string, targetURL string, limit int, result *[]string, numOfArticles *int) bool {
+	sharedMutex.Lock()
 	*numOfArticles++
 	*result = append(*result, currentURL)
+	sharedMutex.Unlock()
 	if currentURL == targetURL {
 		return true
 	}
 
 	if limit <= 1 {
+		sharedMutex.Lock()
 		*result = (*result)[:len(*result)-1]
+		sharedMutex.Unlock()
 		return false
 	}
 
@@ -76,27 +88,36 @@ func DLS(currentURL string, targetURL string, limit int, result *[]string, numOf
 	//links := getAllLinks(currentURL)
 
 	for _, link := range links {
-		//fmt.Println("Cek link", link, "di level", limit)
-		if DLS(link, targetURL, limit-1, result, numOfArticles) {
+		wg.Add(1)
+		fmt.Println("Cek link", link, "di level", limit)
+		if DLS(link, targetURL, limit-1, result, numOfArticles, wg) {
 			return true
 		}
 	}
+	sharedMutex.Lock()
 	*result = (*result)[:len(*result)-1]
+	sharedMutex.Unlock()
 	return false
 }
 
 func IDS(startURL string, targetURL string, maxDepth int, result *[]string, numOfArticles *int) bool {
 	i := 1
+	var wg sync.WaitGroup
+	success := false
 	for {
-		if DLS(startURL, targetURL, i, result, numOfArticles) {
-			return true
-		}
+		wg.Add(1)
+		success = DLS(startURL, targetURL, i, result, numOfArticles, &wg)
 		fmt.Println(i)
 		i++
-		if i == maxDepth {
-			return false // Safe condition only
+		wg.Wait()
+		if success {
+			return true
+		}
+		if i > maxDepth { // Safe condition only
+			break
 		}
 	}
+	return false
 }
 
 // Not used
