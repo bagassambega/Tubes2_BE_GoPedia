@@ -10,6 +10,9 @@ import (
 	"time"
 )
 
+type Tree struct {
+}
+
 // Global variables
 var linkCache = make(map[string][]string)
 var cacheMutex = &sync.Mutex{}
@@ -49,9 +52,7 @@ func getAllLinks(url string) []string {
 }
 
 func cacheLinks(url string) []string {
-	cacheMutex.Lock()
 	links, exists := linkCache[url]
-	cacheMutex.Unlock()
 
 	if exists {
 		//fmt.Println("Menggunakan cache untuk", url)
@@ -60,14 +61,16 @@ func cacheLinks(url string) []string {
 
 	links = getAllLinks(url)
 
-	cacheMutex.Lock()
 	linkCache[url] = links
-	cacheMutex.Unlock()
 	return links
 }
 
 func DLS(currentURL string, targetURL string, limit int, result *[]string, numOfArticles *int, wg *sync.WaitGroup) bool {
 	defer wg.Done()
+
+	if limit <= 1 {
+		return false
+	}
 
 	sharedMutex.Lock()
 	*numOfArticles++
@@ -77,19 +80,12 @@ func DLS(currentURL string, targetURL string, limit int, result *[]string, numOf
 		return true
 	}
 
-	if limit <= 1 {
-		sharedMutex.Lock()
-		*result = (*result)[:len(*result)-1]
-		sharedMutex.Unlock()
-		return false
-	}
-
 	links := cacheLinks(currentURL)
 	//links := getAllLinks(currentURL)
 
 	for _, link := range links {
 		wg.Add(1)
-		fmt.Println("Cek link", link, "di level", limit)
+		//fmt.Println("Cek link", link)
 		if DLS(link, targetURL, limit-1, result, numOfArticles, wg) {
 			return true
 		}
