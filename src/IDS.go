@@ -61,16 +61,19 @@ func cacheLinks(url string) []string {
 func DLS(currentURL string, targetURL string, limit int, result *[]string, numOfArticles *int, wg *sync.WaitGroup) bool {
 	defer wg.Done()
 
-	if limit <= 1 {
-		return false
-	}
-
 	sharedMutex.Lock()
 	*numOfArticles++
 	*result = append(*result, currentURL)
 	sharedMutex.Unlock()
 	if currentURL == targetURL {
 		return true
+	}
+
+	if limit <= 1 {
+		sharedMutex.Lock()
+		*result = (*result)[:len(*result)-1]
+		sharedMutex.Unlock()
+		return false
 	}
 
 	links := cacheLinks(currentURL)
