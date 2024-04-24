@@ -112,7 +112,9 @@ func getResult(history map[string]string, start string, goal string) []string {
 	return result
 }
 
-func BFS(start string, goal string, history *map[string]string, elapsed *time.Duration) {
+func main() {
+	var start string
+	var goal string
 	var queue []string
 	var parent string
 	urlVisited := 0
@@ -127,7 +129,7 @@ func BFS(start string, goal string, history *map[string]string, elapsed *time.Du
 
 	//c.OnRequest(func(r *colly.Request) {
 	//	fmt.Println(r.URL)
-	//})
+	//}
 
 	c.OnHTML("div#mw-content-text a[href]", func(e *colly.HTMLElement) {
 		urlVisited++
@@ -135,13 +137,13 @@ func BFS(start string, goal string, history *map[string]string, elapsed *time.Du
 		if strings.HasPrefix(href, "/wiki/") && !checkIgnoredLink(href) {
 			if href == "/wiki/"+goal {
 				found = true
-				mutex.Lock()
-				(*history)[href[6:]] = queue[0]
-				mutex.Unlock()
+				// mutex.Lock()
+				// (*history)[href[6:]] = queue[0]
+				// mutex.Unlock()
 			} else {
 				queue = append(queue, href[6:])
 				mutex.Lock()
-				(*history)[href[6:]] = queue[0]
+				// (*history)[href[6:]] = queue[0]
 				visited[href[6:]] = false
 				mutex.Unlock()
 			}
@@ -162,7 +164,6 @@ func BFS(start string, goal string, history *map[string]string, elapsed *time.Du
 				if !visited[currLink] {
 					mutex.Unlock()
 					c.Visit("https://en.wikipedia.org/wiki/" + currLink)
-					fmt.Println("Visiting", currLink)
 					queue = HapusAntrian(queue, &parent)
 				} else {
 					mutex.Unlock()
