@@ -9,7 +9,6 @@ import (
 
 // Global variables
 var linkCache = make(map[string][]string)
-var sharedMutex = &sync.Mutex{}
 
 // Jika mengandung salah satu dari identifier seperti File: pada URL, return true
 func checkIgnoredLink(url string) bool {
@@ -58,56 +57,49 @@ func cacheLinks(url string) []string {
 	return links
 }
 
-func DLS(currentURL string, targetURL string, limit int, result *[]string, numOfArticles *int, wg *sync.WaitGroup) bool {
+func DLS(currentURL string, targetURL string, limit int, result []string, visited map[string]bool, numOfArticles *int, wg *sync.WaitGroup) ([]string, bool) {
 	defer wg.Done()
 
-	sharedMutex.Lock()
-	*numOfArticles++
-	*result = append(*result, currentURL)
-	sharedMutex.Unlock()
 	if currentURL == targetURL {
-		return true
+		return result, true
 	}
 
-	if limit <= 1 {
-		sharedMutex.Lock()
-		*result = (*result)[:len(*result)-1]
-		sharedMutex.Unlock()
-		return false
+	if limit <= 1 || visited[currentURL] {
+		return nil, false
 	}
 
+	visited[currentURL] = true
+	defer delete(visited, currentURL)
 	links := cacheLinks(currentURL)
-	//links := getAllLinks(currentURL)
 
 	for _, link := range links {
 		wg.Add(1)
 		//fmt.Println("Cek link", link)
-		if DLS(link, targetURL, limit-1, result, numOfArticles, wg) {
-			return true
+		newPath, found := DLS(link, targetURL, limit-1, append(result, link), visited, numOfArticles, wg)
+		if found {
+			return newPath, true
 		}
 	}
-	sharedMutex.Lock()
-	*result = (*result)[:len(*result)-1]
-	sharedMutex.Unlock()
-	return false
+	return nil, false
 }
 
-func IDS(startURL string, targetURL string, maxDepth int, result *[]string, numOfArticles *int) bool {
+func IDS(startURL string, targetURL string, maxDepth int, numOfArticles *int) ([]string, bool) {
 	i := 1
 	var wg sync.WaitGroup
-	success := false
+	var result []string
+	var visited = make(map[string]bool)
 	for {
 		wg.Add(1)
-		success = DLS(startURL, targetURL, i, result, numOfArticles, &wg)
+		result, success := DLS(startURL, targetURL, i, result, visited, numOfArticles, &wg)
 		fmt.Println(i)
 		i++
 		wg.Wait()
 		if success {
-			return true
+			return result, true
 		}
 		if i > maxDepth { // Safe condition only
 			break
 		}
 	}
-	return false
+	return nil, false
 }

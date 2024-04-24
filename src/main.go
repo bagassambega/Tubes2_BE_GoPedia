@@ -20,7 +20,6 @@ func main() {
 		if method == "IDS" {
 			// Set maximum depth ke 9
 			maxDepth := 9
-			var result []string
 			startTime := time.Now()
 			numOfArticles := 0
 			var elapsedTime time.Duration
@@ -30,7 +29,11 @@ func main() {
 			targetURL = "https://en.wikipedia.org/wiki/" + target
 
 			// Panggil IDS
-			if IDS(startURL, targetURL, maxDepth, &result, &numOfArticles) {
+			hasil, found := IDS(startURL, targetURL, maxDepth, &numOfArticles)
+			result := []string{startURL}
+			result = append(result, hasil...)
+
+			if found {
 				end := time.Now()
 				elapsedTime = end.Sub(startTime)
 				fmt.Println("Waktu eksekusi", elapsedTime)
