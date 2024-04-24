@@ -8,28 +8,31 @@ import (
 	"github.com/gocolly/colly/v2"
 )
 
+type TreeNode struct {
+	childSize int
+	children  []*TreeNode
+	value     string
+}
+
 type Pair struct {
 	First  string
 	Second bool
 }
 
-func BuatAntrian(queue *[]string, start string) {
-	*queue = append(*queue, start)
+func MasukAntrian(queue *[]*TreeNode, link string) {
+	*queue = append(*queue, NewTreeNode(link))
 }
 
-func MasukAntrian(queue *[]string, link string) {
-	*queue = append(*queue, link)
-}
-
-func AntrianKosong(queue []string) bool {
+func AntrianKosong(queue []*TreeNode) bool {
 	return len(queue) == 0
 }
 
-func HapusAntrian(queue []string, parent *string) []string {
+func HapusAntrian(queue []*TreeNode, parent *string) []*TreeNode {
 	if (len(queue) <= 1) {
-		queue = []string{}
+		queue = []*TreeNode{}
 	} else {
-		*parent = queue[0]
+		queue = queue[1:]
+		*parent = queue[0].value
 	}
 	return queue
 }
@@ -50,7 +53,7 @@ func checkIgnoredLink(url string) bool {
 // 	var parent string
 // 	urlVisited := 0
 // 	found := false
-// 	var mutex sync.Mutex
+	// var mutex sync.Mutex
 	
 // 	BuatAntrian(&queue, start)
 // 	visited := make(map[string]bool)
@@ -73,9 +76,9 @@ func checkIgnoredLink(url string) bool {
 // 				found = true
 // 			} else {
 // 				queue = append(queue, href[6:])
-// 				mutex.Lock()
+				// mutex.Lock()
 // 				history[href[6:]] = queue[0]
-// 				mutex.Unlock()
+				// mutex.Unlock()
 // 				visited[href[6:]] = false
 // 			}
 // 		}
@@ -112,9 +115,15 @@ func getResult(history map[string]string, start string, goal string) []string {
 	return result
 }
 
+func NewTreeNode(value string) *TreeNode {
+	return &TreeNode{
+		value:    value,
+		children: []*TreeNode{},
+		childSize: 0,
+	}
+}
+
 func main() {
-	var queue []string
-	var history map[string]string
 	var start string
 	var goal string
 	var parent string
@@ -127,70 +136,91 @@ func main() {
 	fmt.Scan(&start)
 	fmt.Print("Akhir: ")
 	fmt.Scan(&goal)
-
+	
 	startTime := time.Now()
-	BuatAntrian(&queue, start)
-	history = make(map[string]string)
+
+	root := NewTreeNode(" ")
+	root.children = append(root.children, NewTreeNode(start))
+	queue := []*TreeNode{root}
+
 	c := colly.NewCollector(
 		colly.AllowedDomains("en.wikipedia.org"),
+
 	)
 	
 	c.OnRequest(func(r *colly.Request) {
-		fmt.Println(r.URL)
-	})
-
-	c.OnHTML("div#mw-content-text a[href]", func(e *colly.HTMLElement) {
+		// fmt.Println(r.URL)
 		urlVisited++
+	})
+	
+	c.OnHTML("div#mw-content-text a[href]", func(e *colly.HTMLElement) {
 		href := e.Attr("href")
 		if strings.HasPrefix(href, "/wiki/") && !checkIgnoredLink(href) {
-			if href == goal {
+			if href[6:] == goal {
 				found = true
-				mutex.Lock()
-				history[href[6:]] = queue[0]
-				mutex.Unlock()
+				// mutex.Lock()
+				fmt.Println(href[6:])
+				// history[href[6:]] = queue[0]
+				// mutex.Unlock()
 			} else {
-				queue = append(queue, href[6:])
 				mutex.Lock()
-				history[href[6:]] = queue[0]
-				visited[href[6:]] = false
+				queue = append(queue, NewTreeNode(href[6:]))
 				mutex.Unlock()
+				// history[href[6:]] = queue[0]
+				visited[href[6:]] = false
 			}
+			fmt.Println(len(queue))
 		}
 	})
+	
+	parents := make(map[*TreeNode]*TreeNode)
+	
 	c.Visit("https://en.wikipedia.org/wiki/" + start)
 	queue = HapusAntrian(queue, &parent)
+	// mutex.Lock()
+	visited[parent] = true
+	// mutex.Unlock()
 	
-	limiter := make(chan int, 10)
+	// limiter := make(chan int, 200)
 	for !found {
 		mutex.Lock()
-		visited[parent] = true
+		node := queue[0]
+		queue = HapusAntrian(queue, &parent)
 		mutex.Unlock()
-		for _, currLink := range queue {
-			limiter <- 1
-			go func(link string) {
+		for _, Node := range node.children {
+			currLink := Node.value
+			parents[Node] = node
+			if (found) {
+				break
+			}
+			// limiter <- 1
+			// go func(link string) {
+				// mutex.Lock()
+			if !visited[currLink] {
+				// mutex.Unlock()
+				c.Visit("https://en.wikipedia.org/wiki/" + currLink)
+				fmt.Println(len(queue))
 				mutex.Lock()
-				if !visited[currLink] {
-					mutex.Unlock()
-					c.Visit("https://en.wikipedia.org/wiki/" + currLink)
-					queue = HapusAntrian(queue, &parent)
-				} else {
-					mutex.Unlock()
-				}
-				<- limiter
-			}(currLink)
-			// wg.Wait()
+				queue = HapusAntrian(queue, &parent)
+				visited[parent] = true
+				mutex.Unlock()
+			} else {
+				// mutex.Unlock()
+			}
+				// <- limiter
+			// }(currLink)
 		}
 	}
 
 	if found {
-		mutex.Lock()
-		key := goal
-		for key != start {
-			fmt.Println(history[key])
-			key = history[key]
-		}
-		mutex.Unlock()
-		fmt.Println(key)
+		// key := goal
+		// for key != start {
+		// 	fmt.Println(key)
+		// 	mutex.Lock()
+		// // 	// key = history[key]
+		// 	mutex.Unlock()
+		// }
+		// fmt.Println(key)
 	} else {
 		fmt.Println("Goal not found")
 	}
