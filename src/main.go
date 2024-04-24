@@ -2,14 +2,19 @@ package main
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
+
 
 func main() {
 	router := gin.Default()
 	// Format URL: http://localhost:8080/gopedia?method=BFS&source=source&target=target
+
+	router.Use(cors.Default()) //Supaya bisa diakses front-end
 	router.GET("gopedia/", func(c *gin.Context) {
 		// Ambil metode dulu apakah BFS atau IDS
 		method := c.Query("method")
