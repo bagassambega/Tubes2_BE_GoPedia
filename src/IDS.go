@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gocolly/colly/v2"
 	"strings"
-	"sync"
 )
 
 // Global variables
@@ -43,22 +42,21 @@ func getAllLinks(url string) []string {
 	return links
 }
 
-func cacheLinks(url string) []string {
+func cacheLinks(url string) ([]string, bool) {
 	links, exists := linkCache[url]
 
 	if exists {
 		//fmt.Println("Menggunakan cache untuk", url)
-		return links
+		return links, true
 	}
 
 	links = getAllLinks(url)
 
 	linkCache[url] = links
-	return links
+	return links, false
 }
 
-func DLS(currentURL string, targetURL string, limit int, result []string, visited map[string]bool, numOfArticles *int, wg *sync.WaitGroup) ([]string, bool) {
-	defer wg.Done()
+func DLS(currentURL string, targetURL string, limit int, result []string, visited map[string]bool, numOfArticles *int) ([]string, bool) {
 
 	if currentURL == targetURL {
 		return result, true
@@ -70,12 +68,14 @@ func DLS(currentURL string, targetURL string, limit int, result []string, visite
 
 	visited[currentURL] = true
 	defer delete(visited, currentURL)
-	links := cacheLinks(currentURL)
+	links, cached := cacheLinks(currentURL)
+	if !cached {
+		*numOfArticles++
+	}
 
 	for _, link := range links {
-		wg.Add(1)
 		//fmt.Println("Cek link", link)
-		newPath, found := DLS(link, targetURL, limit-1, append(result, link), visited, numOfArticles, wg)
+		newPath, found := DLS(link, targetURL, limit-1, append(result, link), visited, numOfArticles)
 		if found {
 			return newPath, true
 		}
@@ -85,15 +85,12 @@ func DLS(currentURL string, targetURL string, limit int, result []string, visite
 
 func IDS(startURL string, targetURL string, maxDepth int, numOfArticles *int) ([]string, bool) {
 	i := 1
-	var wg sync.WaitGroup
 	var result []string
 	var visited = make(map[string]bool)
 	for {
-		wg.Add(1)
-		result, success := DLS(startURL, targetURL, i, result, visited, numOfArticles, &wg)
+		result, success := DLS(startURL, targetURL, i, result, visited, numOfArticles)
 		fmt.Println(i)
 		i++
-		wg.Wait()
 		if success {
 			return result, true
 		}
