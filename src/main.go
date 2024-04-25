@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"net/http"
 	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
-
 
 func main() {
 	router := gin.Default()
@@ -30,11 +29,12 @@ func main() {
 			var elapsedTime time.Duration
 			fmt.Println("Source", source, "Target", target)
 			var startURL, targetURL string
-			startURL = "https://en.wikipedia.org/wiki/" + source
-			targetURL = "https://en.wikipedia.org/wiki/" + target
+			startURL = "https://en.wikipedia.org/wiki/" + convertToTitleCase(source)
+			targetURL = "https://en.wikipedia.org/wiki/" + convertToTitleCase(target)
 
 			// Panggil IDS
-			hasil, found := IDS(startURL, targetURL, maxDepth, &numOfArticles)
+			hasil, numOfArticles, found := IDSGoroutine(startURL, targetURL, maxDepth, &numOfArticles)
+			//hasil, found := IDS(startURL, targetURL, maxDepth, &numOfArticles)
 			result := []string{startURL}
 			result = append(result, hasil...)
 

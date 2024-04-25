@@ -56,8 +56,11 @@ func cacheLinks(url string) ([]string, bool) {
 	return links, false
 }
 
-func DLS(currentURL string, targetURL string, limit int, result []string, visited map[string]bool, numOfArticles *int) ([]string, bool) {
+func convertToTitleCase(s string) string {
+	return strings.ReplaceAll(s, " ", "_")
+}
 
+func DLS(currentURL string, targetURL string, limit int, result []string, visited map[string]bool, numOfArticles *int) ([]string, bool) {
 	if currentURL == targetURL {
 		return result, true
 	}
@@ -83,20 +86,48 @@ func DLS(currentURL string, targetURL string, limit int, result []string, visite
 	return nil, false
 }
 
-func IDS(startURL string, targetURL string, maxDepth int, numOfArticles *int) ([]string, bool) {
+// IDSGoroutine Return path, number of articles, and whether the target is found
+func IDSGoroutine(startURL, targetURL string, maxDepth int, numOfArticles *int) ([]string, int, bool) {
 	i := 1
 	var result []string
 	var visited = make(map[string]bool)
-	for {
-		result, success := DLS(startURL, targetURL, i, result, visited, numOfArticles)
-		fmt.Println(i)
-		i++
-		if success {
-			return result, true
+
+	ch := make(chan []string, maxDepth)
+	go func(ch chan []string) {
+		for {
+			result, success := DLS(startURL, targetURL, i, result, visited, numOfArticles)
+			if success {
+				ch <- result
+				close(ch)
+				return
+			}
+			fmt.Println(i)
+			i++
+			if i > maxDepth { // Safe condition only
+				ch <- nil
+				close(ch)
+				return
+			}
 		}
-		if i > maxDepth { // Safe condition only
-			break
-		}
-	}
-	return nil, false
+	}(ch)
+	result = <-ch
+	return result, *numOfArticles, result != nil
 }
+
+//func IDS(startURL string, targetURL string, maxDepth int, numOfArticles *int) ([]string, bool) {
+//	i := 1
+//	var result []string
+//	var visited = make(map[string]bool)
+//	for {
+//		result, success := DLS(startURL, targetURL, i, result, visited, numOfArticles)
+//		if success {
+//			return result, true
+//		}
+//		fmt.Println(i)
+//		i++
+//		if i > maxDepth { // Safe condition only
+//			break
+//		}
+//	}
+//	return nil, false
+//}
