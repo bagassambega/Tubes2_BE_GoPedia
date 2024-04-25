@@ -88,14 +88,14 @@ func main() {
 	fmt.Scan(&goal)
 
 	startTime := time.Now()
-	root := NewTreeNode(" ")
-	root.AddChild(NewTreeNode(start))
+	// root := NewTreeNode(" ")
+	root := (NewTreeNode(start))
 	queue = append(queue, root) //Masuk Antrian
 
 	c := colly.NewCollector()
 
 	c.OnRequest(func(r *colly.Request) {
-		fmt.Println(r.URL)
+		// fmt.Println(r.URL)
 		urlVisited++
 	})
 
@@ -117,22 +117,20 @@ func main() {
 				// mutex.Unlock()
 			}
 		}
+		// fmt.Println(len(queue))
 	})
-	
-	// c.Visit("https://en.wikipedia.org/wiki/" + start)
-	// queue = HapusAntrian(queue, &parent)
 	
 	// limiter := make(chan int, 200)
 	for !found {
-		fmt.Println(len(queue))
 		// fmt.Println(queue[0].Value)
-		Node := queue[0]
-		queue = HapusAntrian(queue, &parent)
+		// Node := queue[0]
 		// mutex.Lock()
 		visited[parent] = true
 		// mutex.Unlock()
-		for _, TreeNode := range Node.Children {
+		// fmt.Println(len(queue))
+		for _, TreeNode := range queue {
 			// limiter <- 1
+
 			currLink := TreeNode.Value
 			// go func(link string) {
 				// defer func() {
@@ -157,6 +155,8 @@ func main() {
 			}
 			// wg.Wait()
 		}
+		queue = HapusAntrian(queue, &parent)
+		// fmt.Println(len(queue))
 	}
 
 	if found {
