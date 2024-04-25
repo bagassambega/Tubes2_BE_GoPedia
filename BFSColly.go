@@ -6,7 +6,7 @@ import (
 
 	"github.com/gocolly/colly/v2"
 
-	// "sync"
+	"sync"
 	"time"
 )
 
@@ -59,6 +59,37 @@ func getResult(history map[string]string, start string, goal string) []string {
 	return result
 }
 
+func scrape(currLink string, found* bool, goal* string, queue *[]string, visited map[string]bool, history map[string]string) {
+	c := colly.NewCollector()
+	var mutexhis sync.Mutex
+	var mutexvis sync.Mutex
+
+	c.OnHTML("div#mw-content-text a[href]", func(e *colly.HTMLElement) {
+		href := e.Attr("href")
+		mutexvis.Lock()
+		if strings.HasPrefix(href, "/wiki/") && !checkIgnoredLink(href) && !(visited[href[6:]]){
+			if href == "/wiki/"+ *goal {
+				*found = true
+				mutexhis.Lock()
+				history[href[6:]] = currLink
+				mutexhis.Unlock()
+				e.Request.Abort()
+				} else {
+					*queue = append(*queue, href[6:])
+					mutexhis.Lock()
+					history[href[6:]] = currLink
+					mutexhis.Unlock()
+					mutexvis.Lock()
+					visited[href[6:]] = false
+					mutexvis.Unlock()
+			}
+		}
+		mutexvis.Unlock()
+	})
+	
+	c.Visit("https://en.wikipedia.org/wiki/" + currLink)
+}
+
 func main() {
 	var currLink string
 	var start string
@@ -69,7 +100,7 @@ func main() {
 	found := false
 	visited := make(map[string]bool)
 	history := make(map[string]string)
-	// var mutex sync.Mutex
+	var mutex sync.Mutex
 
 	fmt.Print("Awal: ")
 	fmt.Scan(&start)
@@ -79,59 +110,34 @@ func main() {
 	startTime := time.Now()
 	BuatAntrian(&queue, start)
 
-	c := colly.NewCollector()
-
-	c.OnRequest(func(r *colly.Request) {
-		// fmt.Println(r.URL)
-		urlVisited++
-	})
-
-	c.OnHTML("div#mw-content-text a[href]", func(e *colly.HTMLElement) {
-		href := e.Attr("href")
-		if strings.HasPrefix(href, "/wiki/") && !checkIgnoredLink(href) {
-			if href == "/wiki/"+goal {
-				found = true
-				// mutex.Lock()
-				history[href[6:]] = e.Request.URL.String()
-				// mutex.Unlock()
-				e.Request.Abort()
-			} else {
-				queue = append(queue, href[6:])
-				// mutex.Lock()
-				history[href[6:]] = e.Request.URL.String()
-				visited[href[6:]] = false
-				// mutex.Unlock()
-			}
-		}
-	})
-
-	c.Visit("https://en.wikipedia.org/wiki/" + start)
+	scrape(start, &found, &goal, &queue, visited, history)
 	queue = HapusAntrian(queue, &parent)
-
-	// limiter := make(chan int, 200)
+	
+	limiter := make(chan int, 150)
 	for !found {
 		// mutex.Lock()
-
+		
 		// fmt.Println(queue[0])
 		visited[parent] = true
 		// mutex.Unlock()
 		for _, element := range queue {
-			// limiter <- 1
-			// go func(link string) {
-			currLink = element
-			// defer func() {
+			limiter <- 1
+			go func(link string) {
+				currLink = element
+				// defer func() {
 			// 	<-limiter // Release the limiter token
 			// }()
-			// mutex.Lock()
+			mutex.Lock()
 			if !visited[currLink] {
-				// mutex.Unlock()
-				c.Visit("https://en.wikipedia.org/wiki/" + currLink)
-				queue = HapusAntrian(queue, &parent)
-			} else {
-				// mutex.Unlock()
-			}
-			// <-limiter
-			// }(currLink)
+					mutex.Unlock()
+					scrape(currLink, &found, &goal, &queue, visited, history)
+					// c.Visit("https://en.wikipedia.org/wiki/" + currLink)
+					queue = HapusAntrian(queue, &parent)
+				} else {
+					mutex.Unlock()
+				}
+				<-limiter
+			}(currLink)
 			if found {
 				break
 			}
