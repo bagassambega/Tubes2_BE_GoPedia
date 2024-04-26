@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gocolly/colly/v2"
 	"strings"
-	"sync"
+	// "sync"
 	"time"
 )
 
@@ -34,160 +34,101 @@ func HapusAntrian(queue []string, parent *string) []string {
 	return queue
 }
 
-//func checkIgnoredLink(url string) bool {
-//	ignoredLinks := [...]string{"/File:","/Main_Page", "/Special:", "/Template:", "/Template_page:", "/Help:", "/Category:", "Special:", "/Wikipedia:", "/Portal:", "/Talk:"}
-//	for _, st := range ignoredLinks {
-//		if strings.Contains(url, st) {
-//			return true
-//		}
-//	}
-//	return false
-//}
-
-// func BFSrun(start string, goal string, wg *sync.WaitGroup) map[string]string {
-// 	var queue []string
-// 	var history map[string]string
-// 	var parent string
-// 	urlVisited := 0
-// 	found := false
-// 	var mutex sync.Mutex
-
-// 	BuatAntrian(&queue, start)
-// 	visited := make(map[string]bool)
-// 	history = make(map[string]string)
-
-// 	c := colly.NewCollector(
-// 		colly.AllowedDomains("en.wikipedia.org"),
-// 	)
-
-// 	c.OnRequest(func(r *colly.Request) {
-// 		// fmt.Println(r.URL)
-// 	})
-
-// 	c.OnHTML("div#mw-content-text a[href]", func(e *colly.HTMLElement) {
-// 		urlVisited++
-// 		href := e.Attr("href")
-// 		if strings.HasPrefix(href, "/wiki/") && !checkIgnoredLink(href) {
-// 			// history[href] = parent
-// 			if href == goal {
-// 				found = true
-// 			} else {
-// 				queue = append(queue, href[6:])
-// 				mutex.Lock()
-// 				history[href[6:]] = queue[0]
-// 				mutex.Unlock()
-// 				visited[href[6:]] = false
-// 			}
-// 		}
-// 	})
-
-// 	// printString(queue)
-// 	c.Visit("https://en.wikipedia.org/wiki/" + start)
-// 	queue = HapusAntrian(queue, &parent)
-
-// 	wg.Add(1)
-// 	for !found {
-// 		visited[parent] = true
-// 		for _, currLink := range queue {
-// 			if !visited[currLink] {
-// 				c.Visit("https://en.wikipedia.org/wiki/" + currLink)
-// 				queue = HapusAntrian(queue, &parent)
-// 			}
-// 		}
-// 	}
-
-// 	return history
-// }
-
 func getResult(history map[string]string, start string, goal string) []string {
 	var result []string
 	key := goal
 	for key != start {
 		result = append(result, key)
-		fmt.Println(history[key])
 		key = history[key]
 	}
 	result = append(result, start)
-	fmt.Println(start)
 	return result
 }
 
-func BFS(start string, goal string, history *map[string]string, elapsed *time.Duration) {
+func BFS(start string, goal string, urlVisited *int) ([]string, bool) {
+	var shortestPath []string
+	// var allPath [][]string
+	var currLink string
 	var queue []string
 	var parent string
-	urlVisited := 0
 	found := false
 	visited := make(map[string]bool)
-	var mutex sync.Mutex
+	history := make(map[string]string)
+	// var mutex sync.Mutex
+
+	fmt.Print("Awal: ")
+	fmt.Scan(&start)
+	fmt.Print("Akhir: ")
+	fmt.Scan(&goal)
 
 	startTime := time.Now()
-	BuatAntrian(&queue, start)
+	// root := NewTreeNode(" ")
+	queue = append(queue, start)
 
-	c := colly.NewCollector()
+	c := colly.NewCollector(
+		colly.AllowedDomains("en.wikipedia.org"),
+	)
 
-	//c.OnRequest(func(r *colly.Request) {
-	//	fmt.Println(r.URL)
-	//})
+	c.OnRequest(func(r *colly.Request) {
+		// fmt.Println(r.URL)
+		*urlVisited++
+	})
 
 	c.OnHTML("div#mw-content-text a[href]", func(e *colly.HTMLElement) {
-		urlVisited++
 		href := e.Attr("href")
-		if strings.HasPrefix(href, "/wiki/") && !checkIgnoredLink(href) {
+		if strings.HasPrefix(href, "/wiki/") && !checkIgnoredLink(href){
+			kode := href[6:]
 			if href == "/wiki/"+goal {
 				found = true
-				mutex.Lock()
-				(*history)[href[6:]] = queue[0]
-				mutex.Unlock()
+				history[kode] = currLink
+				e.Request.Abort()
 			} else {
-				queue = append(queue, href[6:])
-				mutex.Lock()
-				(*history)[href[6:]] = queue[0]
-				visited[href[6:]] = false
-				mutex.Unlock()
+				queue = append(queue, kode)
+				if (!visited[kode]) {
+					history[kode] = currLink
+				}
+				visited[kode] = false
 			}
 		}
 	})
-	c.Visit("https://en.wikipedia.org/wiki/" + start)
-	queue = HapusAntrian(queue, &parent)
-
-	limiter := make(chan int, 10)
+	
+	c.OnError(func(r *colly.Response, err error) {
+		fmt.Println("Request URL:", r.Request.URL.String())
+		fmt.Println("Error:", err)
+	})
+	// limiter := make(chan int, 200)
 	for !found {
-		mutex.Lock()
+		// mutex.Lock()
 		visited[parent] = true
-		mutex.Unlock()
-		for _, currLink := range queue {
-			limiter <- 1
-			go func(link string) {
-				mutex.Lock()
-				if !visited[currLink] {
-					mutex.Unlock()
-					c.Visit("https://en.wikipedia.org/wiki/" + currLink)
-					fmt.Println("Visiting", currLink)
-					queue = HapusAntrian(queue, &parent)
-				} else {
-					mutex.Unlock()
-				}
-				<-limiter
-			}(currLink)
-			// wg.Wait()
+		// mutex.Unlock()
+
+		for _, element := range queue {
+			// limiter <- 1
+			// go func(link string) {
+			currLink = element
+			// mutex.Lock()
+			if !visited[currLink] {
+				// mutex.Unlock()
+				c.Visit("https://en.wikipedia.org/wiki/" + currLink)
+				queue = HapusAntrian(queue, &parent)
+			}
+			// <-limiter
+			// }(currLink)
+			if (found) {
+				break
+			}
+
 		}
+		queue = HapusAntrian(queue, &parent)
 	}
 
 	if found {
-		key := goal
-		for key != start {
-			mutex.Lock()
-			fmt.Println((*history)[key])
-			mutex.Unlock()
-			mutex.Lock()
-			key = (*history)[key]
-			mutex.Unlock()
-		}
-		fmt.Println(key)
+		shortestPath = getResult(history, goal, start)
 	} else {
 		fmt.Println("Goal not found")
 	}
 	end := time.Now()
 	fmt.Println("Waktu eksekusi", end.Sub(startTime))
 	fmt.Println("Url visited: ", urlVisited)
+	return shortestPath, found
 }
