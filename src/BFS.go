@@ -31,12 +31,12 @@ func HapusAntrian(queue []string, parent *string) []string {
 
 func getResult(history map[string]string, start string, goal string) []string {
 	var result []string
-	key := goal
-	for key != start {
+	key := start
+	for key != goal {
 		result = append(result, key)
 		key = history[key]
 	}
-	result = append(result, start)
+	result = append(result, goal)
 	return result
 }
 
@@ -73,7 +73,7 @@ func BFS(start string, goal string, urlVisited *int) ([]string, bool) {
 				e.Request.Abort()
 			} else {
 				queue = append(queue, kode)
-				if !visited[kode] {
+				if _,exists := history[kode]; !exists {
 					history[kode] = currLink
 				}
 				visited[kode] = false
