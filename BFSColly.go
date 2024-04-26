@@ -8,41 +8,29 @@ import (
 	"time"
 )
 
-type TreeNode struct {
-	Value string
-	Children []*TreeNode
-}
-
 type Pair struct {
 	First  string
 	Second bool
 }
 
-func NewTreeNode(value string) *TreeNode {
-	return &TreeNode{Value: value}
+type NodeHistory struct {
+	Link string
+	Parent *NodeHistory
 }
 
-func (node *TreeNode) AddChild(child *TreeNode) {
-	node.Children = append(node.Children, child)
+func MasukAntrian(queue *[]string, start string) {
+	*queue = append(*queue, start)
 }
 
-func BuatAntrian(queue *[]*TreeNode, start string) {
-	*queue = append(*queue, NewTreeNode(start))
-}
-
-func MasukAntrian(queue *[]*TreeNode, link string) {
-	*queue = append(*queue, NewTreeNode(link))
-}
-
-func AntrianKosong(queue []*TreeNode) bool {
+func AntrianKosong(queue []string) bool {
 	return len(queue) == 0
 }
 
-func HapusAntrian(queue []*TreeNode, parent *string) []*TreeNode {
+func HapusAntrian(queue []string, parent *string) []string {
 	if len(queue) <= 1 {
-		return []*TreeNode{}
+		return []string{}
 	} else {
-		*parent = queue[0].Value
+		*parent = queue[0]
 	}
 	return queue [1:]
 }
@@ -57,29 +45,64 @@ func checkIgnoredLink(url string) bool {
 	return false
 }
 
-
-func getResult(history map[string]string, start string, goal string) []string {
-	var result []string
-	key := goal
-	for key != start {
-		result = append(result, key)
-		fmt.Println(history[key])
-		key = history[key]
+func isIn (url string, arryStr []string) bool {
+	for _,elm := range arryStr {
+		if (elm == url) {
+			return true
+		}
 	}
-	result = append(result, start)
-	fmt.Println(start)
-	return result
+	return false
+}
+
+// func getResult(history map[string]string, start string, goal string) []string {
+// 	var result []string
+// 	key := goal
+// 	for key != start {
+// 		result = append(result, key)
+// 		key = history[key]
+// 	}
+// 	result = append(result, start)
+// 	return result
+// }
+
+func popBack(slice []string) []string {
+    if len(slice) == 0 {
+        return slice
+    }
+    return slice[:len(slice)-1]
+}
+
+func getAllPaths(history map[string][]string, start string, goal string, path []string, visited map[string]bool, allPath *[][]string) {
+	if (start == goal) {
+		path = append(path, goal)
+		*allPath = append(*allPath, path)
+		path = popBack(path)
+		return
+	}
+
+	path = append(path, start)
+	visited[start] = true
+	for _, elm := range history[start] {
+		if (!visited[elm]) {
+			getAllPaths(history,elm, goal, path, visited, allPath)
+		}
+	}
+	visited[start] = false
+	path = popBack(path)
 }
 
 func main() {
 	var start string
+	var goalParent []string
+	var allPath [][]string
+	var currLink string
 	var goal string
-	var queue []*TreeNode
+	var queue []string
 	var parent string
 	urlVisited := 0
 	found := false
 	visited := make(map[string]bool)
-	history := make(map[*TreeNode]*TreeNode)
+	history := make(map[string][]string)
 	// var mutex sync.Mutex
 
 	fmt.Print("Awal: ")
@@ -89,10 +112,11 @@ func main() {
 
 	startTime := time.Now()
 	// root := NewTreeNode(" ")
-	root := (NewTreeNode(start))
-	queue = append(queue, root) //Masuk Antrian
+	queue = append(queue, start)
 
-	c := colly.NewCollector()
+	c := colly.NewCollector(
+		colly.AllowedDomains("en.wikipedia.org"),
+	)
 
 	c.OnRequest(func(r *colly.Request) {
 		// fmt.Println(r.URL)
@@ -101,80 +125,68 @@ func main() {
 
 	c.OnHTML("div#mw-content-text a[href]", func(e *colly.HTMLElement) {
 		href := e.Attr("href")
-		if strings.HasPrefix(href, "/wiki/") && !checkIgnoredLink(href) {
+		if strings.HasPrefix(href, "/wiki/") && !checkIgnoredLink(href){
+			kode := href[6:]
 			if href == "/wiki/"+goal {
 				found = true
-				history[NewTreeNode(href[6:])] = queue[0]
+				goalParent = append(goalParent, currLink)
 				e.Request.Abort()
-				// mutex.Lock()
-				// mutex.Unlock()
 			} else {
-				queue = append(queue, NewTreeNode(href[6:]))
+				queue = append(queue, kode)
 				// mutex.Lock()
-				history[queue[len(queue) - 1]] = queue[0]
-				// fmt.Println(len(queue), "asd")
-				visited[href[6:]] = false
+				if (!isIn(currLink, history[kode])) {
+					history[kode] = append(history[kode], currLink)
+				}
+				// mutex.Unlock()
+				// mutex.Lock()
+				visited[kode] = false
 				// mutex.Unlock()
 			}
 		}
-		// fmt.Println(len(queue))
 	})
 	
+	c.OnError(func(r *colly.Response, err error) {
+		fmt.Println("Request URL:", r.Request.URL.String())
+		fmt.Println("Error:", err)
+	})
 	// limiter := make(chan int, 200)
 	for !found {
-		// fmt.Println(queue[0].Value)
-		// Node := queue[0]
 		// mutex.Lock()
 		visited[parent] = true
 		// mutex.Unlock()
-		// fmt.Println(len(queue))
-		for _, TreeNode := range queue {
-			// limiter <- 1
 
-			currLink := TreeNode.Value
+		for _, element := range queue {
+			// limiter <- 1
 			// go func(link string) {
-				// defer func() {
-				// 	<-limiter // Release the limiter token
-				// }()
-				// mutex.Lock()
+			currLink = element
+			// mutex.Lock()
 			if !visited[currLink] {
 				// mutex.Unlock()
-				// fmt.Println("yoo")
-				// mutex.Lock()
 				c.Visit("https://en.wikipedia.org/wiki/" + currLink)
-				// mutex.Unlock()
 				queue = HapusAntrian(queue, &parent)
 			}
-			// } else {
-			// 	// mutex.Unlock()
-			// }
-				// <-limiter
+			// <-limiter
 			// }(currLink)
 			if (found) {
 				break
 			}
-			// wg.Wait()
+
 		}
 		queue = HapusAntrian(queue, &parent)
-		// fmt.Println(len(queue))
 	}
 
 	if found {
-		// key := goal
-		// for key != start {
-			// mutex.Lock()
-		// 	fmt.Println((*history)[key])
-			// mutex.Unlock()
-			// mutex.Lock()
-		// 	key = (*history)[key]
-			// mutex.Unlock()
+		path := []string{}
+		visitedNode := make(map[string]bool)
+		getAllPaths(history, goalParent[0], start, path, visitedNode, &allPath)
+		fmt.Println(len(allPath))
+		// for _, X := range allPath {
+		// 	fmt.Println(X)
 		// }
-		// fmt.Println(key)
 	} else {
 		fmt.Println("Goal not found")
 	}
 	end := time.Now()
 	fmt.Println("Waktu eksekusi", end.Sub(startTime))
 	fmt.Println("Url visited: ", urlVisited)
-	// fmt.Println(history)
 }
