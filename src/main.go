@@ -53,12 +53,32 @@ func main() {
 			})
 
 		} else { // BFS
-			history := make(map[string]string)
-			var elapsed time.Duration
-			BFS(source, target, &history, &elapsed)
+			var numOfArticles int
+			
+			var elapsedTime time.Duration
+
+			startTime := time.Now()
+			result, found :=  BFS(source, target , &numOfArticles)
+
+			if found {
+				end := time.Now()
+				elapsedTime = end.Sub(startTime)
+				fmt.Println("Waktu eksekusi", elapsedTime)
+
+				// reverse result
+				length := len(result)
+				for i := 0; i < length/2; i++ {
+					// Swap elements from both ends
+					result[i], result[length-1-i] = result[length-1-i], result[i]
+				}
+			}
+
+
 			c.JSON(http.StatusOK, gin.H{
-				"elapsedTime": elapsed,
-				"result":      history,
+				"numOfArticles": numOfArticles,
+				"result":        result,
+				"length":        len(result),
+				"elapsedTime":   elapsedTime.String(),
 			})
 		}
 	})
