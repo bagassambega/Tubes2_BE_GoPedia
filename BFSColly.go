@@ -49,18 +49,17 @@ func checkIgnoredLink(url string) bool {
 
 func getResult(history map[string]string, start string, goal string) []string {
 	var result []string
-	key := goal
-	for key != start {
+	key := start
+	for key != goal {
 		result = append(result, key)
 		key = history[key]
 	}
-	result = append(result, start)
+	result = append(result, goal)
 	return result
 }
 
 func main() {
 	var start string
-	var goalParent []string
 	var shortestPath []string
 	var currLink string
 	var goal string
@@ -96,12 +95,12 @@ func main() {
 			kode := href[6:]
 			if href == "/wiki/"+goal {
 				found = true
-				goalParent = append(goalParent, currLink)
+				history[kode] = currLink
 				e.Request.Abort()
 			} else {
 				queue = append(queue, kode)
 				// mutex.Lock()
-				if !visited[kode] {
+				if _,exists := history[kode]; !exists {
 					history[kode] = currLink
 				}
 				// mutex.Unlock()
@@ -141,16 +140,17 @@ func main() {
 		}
 		queue = HapusAntrian(queue, &parent)
 	}
-
+	
+	end := time.Now()
+	fmt.Println("Waktu eksekusi", end.Sub(startTime))
+	fmt.Println("Url visited: ", urlVisited)
 	if found {
-		shortestPath = getResult(history, start, goalParent[0])
+		fmt.Println(history[goal])
+		shortestPath = getResult(history, goal, start)
 		for _, X := range shortestPath {
 			fmt.Println(X)
 		}
 	} else {
 		fmt.Println("Goal not found")
 	}
-	end := time.Now()
-	fmt.Println("Waktu eksekusi", end.Sub(startTime))
-	fmt.Println("Url visited: ", urlVisited)
 }
