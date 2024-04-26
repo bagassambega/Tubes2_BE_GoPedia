@@ -80,6 +80,10 @@ func main() {
 				}
 			}
 
+			for i, link := range result {
+				result[i] = convertToTitleCase(link)
+			}
+
 			c.JSON(http.StatusOK, gin.H{
 				"numOfArticles": numOfArticles,
 				"result":        result,

@@ -67,3 +67,9 @@ dan pengguna dapat memasukkan artikel awal dan artikel tujuan untuk mencari jalu
 **_NOTE:_**
 Setelah langkah-langkah di atas dilakukan, bagian _backend_ Wikirace akan berjalan pada _port_ 8080. Data sudah dapat diakses melalui _browser_ dengan membuka alamat http://localhost:8080/gopedia/?method=[metode]&source=[awal]&target=[akhir], dengan mengganti [metode] menjadi IDS/BFS, [awal] menjadi artikel awal, dan [akhir] menjadi artikel tujuan. Contoh: http://localhost:8080/gopedia/?method=IDS&source=Indonesia&target=Jepang. 
 Jika bagian _frontend_ tidak berjalan dengan baik, data dapat diakses langsung dengan langkah di atas.
+
+**_NOTE:_**
+Jika _build docker_ gagal atau menjalankan dengan _docker_ tidak berhasil, program dapat dijalankan dengan menjalankan _command_ berikut pada folder src:
+```bash
+go run .
+```
