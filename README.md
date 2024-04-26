@@ -58,6 +58,11 @@ docker build -t gopedia-backend .
 ```bash
 docker run -p 8080:8080 gopedia-backend
 ```
+6. Untuk menghentikan program, jalankan _command_ berikut. Lihat _container_id_ dengan menjalankan _command_ `docker ps` atau pada Docker Desktop
+```bash
+docker stop [container_id]
+```
+
 
 Setelah program _backend_ berjalan dan langkah-langkah menjalankan _frontend_ selesai, program dapat diakses pada _browser_ dengan membuka alamat http://localhost:5173/
 dan pengguna dapat memasukkan artikel awal dan artikel tujuan untuk mencari jalur terpendek dari artikel awal ke artikel tujuan.
