@@ -1,6 +1,6 @@
 FROM golang:latest
 
-WORKDIR /backend
+WORKDIR /app
 
 COPY go.mod go.sum ./
 
@@ -8,11 +8,11 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o backend .
+RUN go build -o main .
 
 EXPOSE 8080
 
-CMD ["./backend"]
+CMD ["./main"]
 
-# docker build -t gopedia-backend .
-# docker run gopedia-backend
+# docker build -t gopedia-backend
+# docker run -p 8080:8080 gopedia-backend

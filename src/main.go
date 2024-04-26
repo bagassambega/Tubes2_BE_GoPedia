@@ -45,9 +45,9 @@ func main() {
 			}
 
 			// Dapatkan judul artikel dari link
-			for i, link := range result {
-				result[i] = convertToArticleTitle(link)
-			}
+			//for i, link := range result {
+			//	result[i] = convertToArticleTitle(link)
+			//}
 
 			// Tampilkan hasil
 			c.JSON(http.StatusOK, gin.H{
