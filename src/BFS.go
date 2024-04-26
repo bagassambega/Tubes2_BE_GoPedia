@@ -33,10 +33,10 @@ func getResult(history map[string]string, start string, goal string) []string {
 	var result []string
 	key := start
 	for key != goal {
-		result = append(result, "//en.wikipedia/org/wiki/" + key)
+		result = append(result, "//en.wikipedia.org/wiki/" + key)
 		key = history[key]
 	}
-	result = append(result, "//en.wikipedia/org/wiki/" + goal)
+	result = append(result, "//en.wikipedia.org/wiki/" + goal)
 	return result
 }
 
