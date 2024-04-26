@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -81,7 +82,7 @@ func main() {
 			}
 
 			for i, link := range result {
-				result[i] = convertToTitleCase(link)
+				result[i] = strings.ReplaceAll(link, "_", " ")
 			}
 
 			c.JSON(http.StatusOK, gin.H{
