@@ -16,7 +16,7 @@
 ## Deskripsi Program
 Program ini adalah program untuk menyelesaikan permainan Wikirace menggunakan algoritma IDS dan BFS. Permainan Wikirace adalah permainan untuk mencari 
 jalur terpendek dari satu artikel Wikipedia ke artikel lainnya. Program ini akan mencari jalur terpendek dari artikel awal ke artikel tujuan dengan melakukan 
-_scraping_ pada artikel-artikel yang dikunjungi, dan mengunjungi artikel-artikel tersebut untuk mencari artikel tujuan. Program akan menghasilkan jalur terpendek dari artikel awal ke artikel tujuan.
+_scraping_ pada artikel-artikel yang dikunjungi, dan mengunjungi artikel-artikel tersebut untuk mencari artikel tujuan. Program akan menghasilkan jalur terpendek dari artikel awal ke artikel tujuan pada laman Wikipedia. Laman artikel Wikipedia yang digunakan terbatas pada bahasa Inggris dan tidak menggunakan laman khusus seperti: "/File:", "/Special:", "/Template:", "/Template_page:", "/Help:", "/Category:", "Special:", "/Wikipedia:", "/Portal:", "/Talk:".
 
 _Repository_ ini adalah bagian _backend_ dari program yang berisi _script_ dalam bahasa Go untuk menjalankan fungsi pemrosesan permainan Wikirace dan mengirimkan datanya melalui API ke 
 <a href="https://github.com/bagassambega/Tubes2_FE_GoPedia">_frontend_</a> yang dibuat menggunakan _framework_ ReactJS. Kedua _repository_ perlu dijalankan bersamaan untuk
@@ -26,18 +26,18 @@ menjalankan program Wikirace. Link kedua repository:
 
 ## Implementasi Algoritma
 Program ini menggunakan dua algoritma untuk menyelesaikan permainan Wikirace, yaitu:
-1. Algoritma IDS (_Iterative Deepening Search_): Algoritma ini adalah algoritma _search_ yang melakukan _depth-first search_ dengan level _depth_ yang bertambah secara iteratif. Implementasi algoritma ini terdapat pada file src/IDS.go, yang berisi fungsi utama IDS yang akan melakukan pemanggilan fungsi DLS/_Depth Limited Search_ sampai dengan level tertentu. Jika pada level tersebut tidak ditemukan solusi, maka level kedalaman akan ditingkatkan dan fungsi DLS akan
+1. Algoritma IDS (_Iterative Deepening Search_): Algoritma ini adalah algoritma _search_ yang melakukan _depth-first search_ dengan level _depth_ yang bertambah secara iteratif. Implementasi algoritma ini terdapat pada file src/IDS.go, yang berisi fungsi utama IDS yang akan melakukan pemanggilan fungsi DLS/_Depth Limited Search_ sampai dengan level tertentu. Pencarian akan dilakukan ke simpul tetangga terlebih dahulu. Jika pada level tersebut tidak ditemukan solusi, maka level kedalaman akan ditingkatkan dan fungsi DLS akan
 dipanggil kembali dengan level kedalaman yang baru.
 2. Algoritma BFS (_Breadth-First Search_): Algoritma ini adalah algoritma _search_ yang melakukan pencarian pada satu level terlebih dahulu secara keseluruhan sebelum mencari di level kedalaman berikutnya.
 Implementasi algoritma ini terdapat pada file src/BFS.go, yang berisi fungsi utama BFS yang akan melakukan pencarian dengan melakukan _scraping_ dan menyimpan seluruh tautan pada suatu level ke dalam _queue_, dan mengunjungi setiap artikel pada _queue_
-tersebut untuk mencari artikel tujuan. Jika tidak ditemukan artikel tujuan pada level tersebut, fungsi akan melakukan _scraping_ pada level kedalaman selanjutnya dan mengunjunginya secara keseluruhan.
+tersebut untuk mencari artikel tujuan. Jika tidak ditemukan artikel tujuan pada level tersebut, fungsi akan melakukan _scraping_ pada level kedalaman selanjutnya dan mengunjunginya secara keseluruhan secara melebar.
 
 ## Cara Penggunaan Program
 Program memerlukan <a href="https://github.com/bagassambega/Tubes2_FE_GoPedia">_frontend_</a> untuk menjalankan program Wikirace. Langkah instalasi terdapat pada _repository_ _frontend_ tersebut.
 ### Requirement
 1. Go terinstal di perangkat
 2. _Framework_ Gin dan Gocolly
-3. Docker Desktop
+3. Docker dan Docker Desktop
 
 ### Instalasi
 1. Clone _repository_ ini
@@ -72,7 +72,7 @@ dan pengguna dapat memasukkan artikel awal dan artikel tujuan untuk mencari jalu
 
 
 **_NOTE:_**
-Setelah langkah-langkah di atas dilakukan, bagian _backend_ Wikirace akan berjalan pada _port_ 8080. Data sudah dapat diakses melalui _browser_ dengan membuka alamat http://localhost:8080/gopedia/?method=[metode]&source=[awal]&target=[akhir], dengan mengganti [metode] menjadi IDS/BFS, [awal] menjadi artikel awal, dan [akhir] menjadi artikel tujuan. Contoh: http://localhost:8080/gopedia/?method=IDS&source=Indonesia&target=Jepang. 
+Setelah langkah-langkah di atas dilakukan, bagian _backend_ Wikirace akan berjalan pada _port_ 8080. Data sudah dapat diakses melalui _browser_ dengan membuka alamat http://localhost:8080/gopedia/?method=[metode]&source=[awal]&target=[akhir], dengan mengganti [metode] menjadi IDS/BFS, [awal] menjadi artikel awal, dan [akhir] menjadi artikel tujuan. Contoh: http://localhost:8080/gopedia/?method=IDS&source=Indonesia&target=Joko_Widodo. 
 Jika bagian _frontend_ tidak berjalan dengan baik, data dapat diakses langsung dengan langkah di atas.
 
 **_NOTE:_**
