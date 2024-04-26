@@ -44,6 +44,11 @@ func main() {
 				fmt.Println("Waktu eksekusi", elapsedTime)
 			}
 
+			// Dapatkan judul artikel dari link
+			for i, link := range result {
+				result[i] = convertToArticleTitle(link)
+			}
+
 			// Tampilkan hasil
 			c.JSON(http.StatusOK, gin.H{
 				"numOfArticles": numOfArticles,
@@ -54,11 +59,13 @@ func main() {
 
 		} else { // BFS
 			var numOfArticles int
-			
+
 			var elapsedTime time.Duration
+			start := convertToTitleCase(source)
+			goal := convertToTitleCase(target)
 
 			startTime := time.Now()
-			result, found :=  BFS(source, target , &numOfArticles)
+			result, found := BFS(start, goal, &numOfArticles)
 
 			if found {
 				end := time.Now()
@@ -72,7 +79,6 @@ func main() {
 					result[i], result[length-1-i] = result[length-1-i], result[i]
 				}
 			}
-
 
 			c.JSON(http.StatusOK, gin.H{
 				"numOfArticles": numOfArticles,

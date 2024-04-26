@@ -8,11 +8,6 @@ import (
 	"time"
 )
 
-type Pair struct {
-	First  string
-	Second bool
-}
-
 func BuatAntrian(queue *[]string, start string) {
 	*queue = append(*queue, start)
 }
@@ -65,18 +60,18 @@ func BFS(start string, goal string, urlVisited *int) ([]string, bool) {
 	// root := NewTreeNode(" ")
 	queue = append(queue, start)
 
-	c := colly.NewCollector(
-		colly.AllowedDomains("en.wikipedia.org"),
-	)
+	c := colly.NewCollector()
 
 	c.OnRequest(func(r *colly.Request) {
 		// fmt.Println(r.URL)
 		*urlVisited++
 	})
 
+	fmt.Println("Start BFS")
+
 	c.OnHTML("div#mw-content-text a[href]", func(e *colly.HTMLElement) {
 		href := e.Attr("href")
-		if strings.HasPrefix(href, "/wiki/") && !checkIgnoredLink(href){
+		if strings.HasPrefix(href, "/wiki/") && !checkIgnoredLink(href) {
 			kode := href[6:]
 			if href == "/wiki/"+goal {
 				found = true
@@ -84,14 +79,14 @@ func BFS(start string, goal string, urlVisited *int) ([]string, bool) {
 				e.Request.Abort()
 			} else {
 				queue = append(queue, kode)
-				if (!visited[kode]) {
+				if !visited[kode] {
 					history[kode] = currLink
 				}
 				visited[kode] = false
 			}
 		}
 	})
-	
+
 	c.OnError(func(r *colly.Response, err error) {
 		fmt.Println("Request URL:", r.Request.URL.String())
 		fmt.Println("Error:", err)
@@ -114,7 +109,7 @@ func BFS(start string, goal string, urlVisited *int) ([]string, bool) {
 			}
 			// <-limiter
 			// }(currLink)
-			if (found) {
+			if found {
 				break
 			}
 
@@ -124,6 +119,7 @@ func BFS(start string, goal string, urlVisited *int) ([]string, bool) {
 
 	if found {
 		shortestPath = getResult(history, goal, start)
+		fmt.Println("Goal found")
 	} else {
 		fmt.Println("Goal not found")
 	}

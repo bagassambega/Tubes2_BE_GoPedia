@@ -9,17 +9,6 @@ import (
 // Global variables
 var linkCache = make(map[string][]string)
 
-// Jika mengandung salah satu dari identifier seperti File: pada URL, return true
-func checkIgnoredLink(url string) bool {
-	ignoredLinks := [...]string{"/File:", "/Special:", "/Template:", "/Template_page:", "/Help:", "/Category:", "Special:", "/Wikipedia:", "/Portal:", "/Talk:"}
-	for _, st := range ignoredLinks {
-		if strings.Contains(url, st) {
-			return true
-		}
-	}
-	return false
-}
-
 func getAllLinks(url string) []string {
 	//c := colly.NewCollector(colly.CacheDir("./cache"))
 	c := colly.NewCollector()
@@ -54,10 +43,6 @@ func cacheLinks(url string) ([]string, bool) {
 
 	linkCache[url] = links
 	return links, false
-}
-
-func convertToTitleCase(s string) string {
-	return strings.ReplaceAll(s, " ", "_")
 }
 
 func DLS(currentURL string, targetURL string, limit int, result []string, visited map[string]bool, numOfArticles *int) ([]string, bool) {
@@ -113,6 +98,50 @@ func IDSGoroutine(startURL, targetURL string, maxDepth int, numOfArticles *int) 
 	result = <-ch
 	return result, *numOfArticles, result != nil
 }
+
+//func IDSGoroutine2(startURL, targetURL string, maxDepth int) ([]string, int, bool) {
+//	chanResult := make(chan []string)
+//	chanNumber := make(chan int)
+//	n := 0
+//
+//	go func() {
+//		wg := sync.WaitGroup{}
+//		for i := 0; i < 10; i++ {
+//			wg.Add(1)
+//			go func() {
+//				defer wg.Done()
+//				result, success := DLS(startURL, targetURL, i, make([]string, 0), make(map[string]bool), &n)
+//				chanResult <- result
+//				chanNumber <- n
+//			}()
+//		}
+//		wg.Wait()
+//		close(chanResult)
+//
+//	}()
+//
+//}
+
+//func DLS2(currentURL, targetURL string, limit int, result []string, number *int, visited map[string]bool) ([]string, bool) {
+//	if currentURL == targetURL {
+//		return result, true
+//	}
+//
+//	if limit <= 1 || visited[currentURL] {
+//		return nil, false
+//	}
+//
+//	visited[currentURL] = true
+//	defer delete(visited, currentURL)
+//	links, cached := cacheLinks(currentURL)
+//	if !cached {
+//		*number++
+//	}
+//
+//	chan := make(chan []string)
+//	if
+//
+//}
 
 //func IDS(startURL string, targetURL string, maxDepth int, numOfArticles *int) ([]string, bool) {
 //	i := 1
