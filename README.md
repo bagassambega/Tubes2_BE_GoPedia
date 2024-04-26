@@ -19,10 +19,10 @@ jalur terpendek dari satu artikel Wikipedia ke artikel lainnya. Program ini akan
 _scraping_ pada artikel-artikel yang dikunjungi, dan mengunjungi artikel-artikel tersebut untuk mencari artikel tujuan. Program akan menghasilkan jalur terpendek dari artikel awal ke artikel tujuan.
 
 _Repository_ ini adalah bagian _backend_ dari program yang berisi _script_ dalam bahasa Go untuk menjalankan fungsi pemrosesan permainan Wikirace dan mengirimkan datanya melalui API ke 
-<a href="github.com/bagassambega/Tubes2_FE_GoPedia">_frontend_</a> yang dibuat menggunakan _framework_ ReactJS. Kedua _repository_ perlu dijalankan bersamaan untuk
+<a href="https://github.com/bagassambega/Tubes2_FE_GoPedia">_frontend_</a> yang dibuat menggunakan _framework_ ReactJS. Kedua _repository_ perlu dijalankan bersamaan untuk
 menjalankan program Wikirace. Link kedua repository:
-1. <a href="github.com/bagassambega/Tubes2_BE_GoPedia">Backend</a>
-2. <a href="github.com/bagassambega/Tubes2_FE_GoPedia">Frontend</a>
+1. <a href="https://github.com/bagassambega/Tubes2_BE_GoPedia">Backend</a>
+2. <a href="https://github.com/bagassambega/Tubes2_FE_GoPedia">Frontend</a>
 
 ## Implementasi Algoritma
 Program ini menggunakan dua algoritma untuk menyelesaikan permainan Wikirace, yaitu:
@@ -33,7 +33,7 @@ Implementasi algoritma ini terdapat pada file src/BFS.go, yang berisi fungsi uta
 tersebut untuk mencari artikel tujuan. Jika tidak ditemukan artikel tujuan pada level tersebut, fungsi akan melakukan _scraping_ pada level kedalaman selanjutnya dan mengunjunginya secara keseluruhan.
 
 ## Cara Penggunaan Program
-Program memerlukan <a href="github.com/bagassambega/Tubes2_FE_GoPedia">_frontend_</a> untuk menjalankan program Wikirace. Langkah instalasi terdapat pada _repository_ _frontend_ tersebut.
+Program memerlukan <a href="https://github.com/bagassambega/Tubes2_FE_GoPedia">_frontend_</a> untuk menjalankan program Wikirace. Langkah instalasi terdapat pada _repository_ _frontend_ tersebut.
 ### Requirement
 1. Go terinstal di perangkat
 2. _Framework_ Gin dan Gocolly

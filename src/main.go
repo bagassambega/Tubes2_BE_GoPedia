@@ -45,10 +45,10 @@ func main() {
 				fmt.Println("Waktu eksekusi", elapsedTime)
 			}
 
-			// Dapatkan judul artikel dari link
-			//for i, link := range result {
-			//	result[i] = convertToArticleTitle(link)
-			//}
+			//Dapatkan judul artikel dari link
+			for i, link := range result {
+				result[i] = convertToArticleTitle(link)
+			}
 
 			// Tampilkan hasil
 			c.JSON(http.StatusOK, gin.H{
