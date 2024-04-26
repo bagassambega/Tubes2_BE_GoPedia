@@ -20,7 +20,9 @@ _scraping_ pada artikel-artikel yang dikunjungi, dan mengunjungi artikel-artikel
 
 _Repository_ ini adalah bagian _backend_ dari program yang berisi _script_ dalam bahasa Go untuk menjalankan fungsi pemrosesan permainan Wikirace dan mengirimkan datanya melalui API ke 
 <a href="github.com/bagassambega/Tubes2_FE_GoPedia">_frontend_</a> yang dibuat menggunakan _framework_ ReactJS. Kedua _repository_ perlu dijalankan bersamaan untuk
-menjalankan program Wikirace.
+menjalankan program Wikirace. Link kedua repository:
+1. <a href="github.com/bagassambega/Tubes2_BE_GoPedia">Backend</a>
+2. <a href="github.com/bagassambega/Tubes2_FE_GoPedia">Frontend</a>
 
 ## Implementasi Algoritma
 Program ini menggunakan dua algoritma untuk menyelesaikan permainan Wikirace, yaitu:
