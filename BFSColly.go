@@ -77,7 +77,6 @@ func main() {
 	fmt.Scan(&goal)
 
 	startTime := time.Now()
-	// root := NewTreeNode(" ")
 	queue = append(queue, start)
 
 	c := colly.NewCollector(
@@ -95,7 +94,9 @@ func main() {
 			kode := href[6:]
 			if href == "/wiki/"+goal {
 				found = true
+				// mutex.Lock()
 				history[kode] = currLink
+				// mutex.Unlock()
 				e.Request.Abort()
 			} else {
 				queue = append(queue, kode)
@@ -115,37 +116,34 @@ func main() {
 		fmt.Println("Request URL:", r.Request.URL.String())
 		fmt.Println("Error:", err)
 	})
+
 	// limiter := make(chan int, 200)
 	for !found {
-		// mutex.Lock()
-		visited[parent] = true
-		// mutex.Unlock()
-
 		for _, element := range queue {
 			// limiter <- 1
 			// go func(link string) {
 			currLink = element
 			// mutex.Lock()
 			if !visited[currLink] {
-				// mutex.Unlock()
 				c.Visit("https://en.wikipedia.org/wiki/" + currLink)
 				queue = HapusAntrian(queue, &parent)
+				// mutex.Lock()
+				visited[parent] = true
+				// mutex.Unlock()
 			}
-			// <-limiter
+				// mutex.Unlock()
+				// <-limiter
 			// }(currLink)
 			if found {
 				break
 			}
-
 		}
-		queue = HapusAntrian(queue, &parent)
 	}
 	
 	end := time.Now()
 	fmt.Println("Waktu eksekusi", end.Sub(startTime))
 	fmt.Println("Url visited: ", urlVisited)
 	if found {
-		fmt.Println(history[goal])
 		shortestPath = getResult(history, goal, start)
 		for _, X := range shortestPath {
 			fmt.Println(X)
