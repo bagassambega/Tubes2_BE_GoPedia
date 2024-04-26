@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/gocolly/colly/v2"
 	"strings"
+
+	"github.com/gocolly/colly/v2"
 	// "sync"
-	"time"
 )
 
 func BuatAntrian(queue *[]string, start string) {
@@ -51,12 +51,6 @@ func BFS(start string, goal string, urlVisited *int) ([]string, bool) {
 	history := make(map[string]string)
 	// var mutex sync.Mutex
 
-	fmt.Print("Awal: ")
-	fmt.Scan(&start)
-	fmt.Print("Akhir: ")
-	fmt.Scan(&goal)
-
-	startTime := time.Now()
 	// root := NewTreeNode(" ")
 	queue = append(queue, start)
 
@@ -118,13 +112,11 @@ func BFS(start string, goal string, urlVisited *int) ([]string, bool) {
 	}
 
 	if found {
-		shortestPath = getResult(history, goal, start)
 		fmt.Println("Goal found")
+		shortestPath = getResult(history, goal, start)
 	} else {
 		fmt.Println("Goal not found")
 	}
-	end := time.Now()
-	fmt.Println("Waktu eksekusi", end.Sub(startTime))
-	fmt.Println("Url visited: ", urlVisited)
+
 	return shortestPath, found
 }
