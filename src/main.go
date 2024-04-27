@@ -50,6 +50,7 @@ func main() {
 				result[i] = convertToArticleTitle(link)
 			}
 
+			fmt.Print(result)
 			// Tampilkan hasil
 			c.JSON(http.StatusOK, gin.H{
 				"numOfArticles": numOfArticles,
@@ -81,10 +82,12 @@ func main() {
 				}
 			}
 
+			
 			for i, link := range result {
 				result[i] = strings.ReplaceAll(link, "_", " ")
 			}
-
+			
+			fmt.Println(result)
 			c.JSON(http.StatusOK, gin.H{
 				"numOfArticles": numOfArticles,
 				"result":        result,
