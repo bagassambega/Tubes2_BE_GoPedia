@@ -8,6 +8,7 @@ import (
 
 // Global variables
 var linkCache = make(map[string][]string)
+var visited = make(map[string]bool)
 
 func getAllLinks(url string) []string {
 	//c := colly.NewCollector(colly.CacheDir("./cache"))
@@ -45,7 +46,7 @@ func cacheLinks(url string) ([]string, bool) {
 	return links, false
 }
 
-func DLS(currentURL string, targetURL string, limit int, result []string, visited map[string]bool, numOfArticles *int) ([]string, bool) {
+func DLS(currentURL string, targetURL string, limit int, result []string, numOfArticles *int) ([]string, bool) {
 	if currentURL == targetURL {
 		return result, true
 	}
@@ -63,7 +64,7 @@ func DLS(currentURL string, targetURL string, limit int, result []string, visite
 
 	for _, link := range links {
 		//fmt.Println("Cek link", link)
-		newPath, found := DLS(link, targetURL, limit-1, append(result, link), visited, numOfArticles)
+		newPath, found := DLS(link, targetURL, limit-1, append(result, link), numOfArticles)
 		if found {
 			return newPath, true
 		}
@@ -75,12 +76,11 @@ func DLS(currentURL string, targetURL string, limit int, result []string, visite
 func IDSGoroutine(startURL, targetURL string, maxDepth int, numOfArticles *int) ([]string, int, bool) {
 	i := 1
 	var result []string
-	var visited = make(map[string]bool)
 
 	ch := make(chan []string, maxDepth)
 	go func(ch chan []string) {
 		for {
-			result, success := DLS(startURL, targetURL, i, result, visited, numOfArticles)
+			result, success := DLS(startURL, targetURL, i, result, numOfArticles)
 			if success {
 				ch <- result
 				close(ch)
