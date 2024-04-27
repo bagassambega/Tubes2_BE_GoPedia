@@ -36,7 +36,6 @@ func cacheLinks(url string) ([]string, bool) {
 	links, exists := linkCache[url]
 
 	if exists {
-		//fmt.Println("Menggunakan cache untuk", url)
 		return links, true
 	}
 
@@ -73,7 +72,7 @@ func DLS(currentURL string, targetURL string, limit int, result []string, numOfA
 }
 
 // IDSGoroutine Return path, number of articles, and whether the target is found
-func IDSGoroutine(startURL, targetURL string, maxDepth int, numOfArticles *int) ([]string, int, bool) {
+func IDS(startURL, targetURL string, maxDepth int, numOfArticles *int) ([]string, int, bool) {
 	i := 1
 	var result []string
 
@@ -100,65 +99,3 @@ func IDSGoroutine(startURL, targetURL string, maxDepth int, numOfArticles *int) 
 	visited = make(map[string]bool)
 	return result, *numOfArticles, result != nil
 }
-
-//func IDSGoroutine2(startURL, targetURL string, maxDepth int) ([]string, int, bool) {
-//	chanResult := make(chan []string)
-//	chanNumber := make(chan int)
-//	n := 0
-//
-//	go func() {
-//		wg := sync.WaitGroup{}
-//		for i := 0; i < 10; i++ {
-//			wg.Add(1)
-//			go func() {
-//				defer wg.Done()
-//				result, success := DLS(startURL, targetURL, i, make([]string, 0), make(map[string]bool), &n)
-//				chanResult <- result
-//				chanNumber <- n
-//			}()
-//		}
-//		wg.Wait()
-//		close(chanResult)
-//
-//	}()
-//
-//}
-
-//func DLS2(currentURL, targetURL string, limit int, result []string, number *int, visited map[string]bool) ([]string, bool) {
-//	if currentURL == targetURL {
-//		return result, true
-//	}
-//
-//	if limit <= 1 || visited[currentURL] {
-//		return nil, false
-//	}
-//
-//	visited[currentURL] = true
-//	defer delete(visited, currentURL)
-//	links, cached := cacheLinks(currentURL)
-//	if !cached {
-//		*number++
-//	}
-//
-//	chan := make(chan []string)
-//	if
-//
-//}
-
-//func IDS(startURL string, targetURL string, maxDepth int, numOfArticles *int) ([]string, bool) {
-//	i := 1
-//	var result []string
-//	var visited = make(map[string]bool)
-//	for {
-//		result, success := DLS(startURL, targetURL, i, result, visited, numOfArticles)
-//		if success {
-//			return result, true
-//		}
-//		fmt.Println(i)
-//		i++
-//		if i > maxDepth { // Safe condition only
-//			break
-//		}
-//	}
-//	return nil, false
-//}
