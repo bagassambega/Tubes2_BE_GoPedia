@@ -10,23 +10,6 @@ import (
 	"time"
 )
 
-func MasukAntrian(queue *[]string, start string) {
-	*queue = append(*queue, start)
-}
-
-func AntrianKosong(queue []string) bool {
-	return len(queue) == 0
-}
-
-func HapusAntrian(queue []string, parent *string) []string {
-	if len(queue) <= 1 {
-		return []string{}
-	} else {
-		*parent = queue[0]
-	}
-	return queue[1:]
-}
-
 func getResult(history map[string]string, start string, goal string) []string {
 	var result []string
 	key := start
