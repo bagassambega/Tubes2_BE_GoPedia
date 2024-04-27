@@ -47,24 +47,23 @@ func checkIgnoredLink(url string) bool {
 	return false
 }
 
-func uniqueArray(arr []string) []string {
-    seen := make(map[string]struct{})
-    uniqueArr := make([]string, 0, len(arr))
+// func uniqueArray(arr []string) []string {
+//     seen := make(map[string]struct{})
+//     uniqueArr := make([]string, 0, len(arr))
 
-    for _, val := range arr {
-        if _, ok := seen[val]; !ok {
-            seen[val] = struct{}{}
-            uniqueArr = append(uniqueArr, val)
-        }
-    }
+//     for _, val := range arr {
+//         if _, ok := seen[val]; !ok {
+//             seen[val] = struct{}{}
+//             uniqueArr = append(uniqueArr, val)
+//         }
+//     }
 
-    return uniqueArr
-}
+//     return uniqueArr
+// }
 
-func getResult(history map[string]string, start string, goal string, realgoal string) []string {
+func getResult(history map[string]string, start string, goal string) []string {
 	var result []string
 	key := start
-	result = append(result, realgoal)
 	for key != goal {
 		result = append(result, key)
 		key = history[key]
@@ -89,7 +88,7 @@ func (rm *SafeBoolMap) Store(key string, value bool) {
 	rm.Unlock()
 }
 
-func (rm *SafeBoolMap) Load(key string) (bool, bool){
+func (rm *SafeBoolMap) Load(key string) (bool, bool) {
 	rm.RLock()
 	result, ok := rm.SafeMap[key]
 	rm.RUnlock()
@@ -102,14 +101,14 @@ func (rm *SafeStringMap) Store(key string, value string) {
 	rm.Unlock()
 }
 
-func (rm *SafeStringMap) Load(key string) (string, bool){
+func (rm *SafeStringMap) Load(key string) (string, bool) {
 	rm.RLock()
 	result,ok  := rm.SafeMap[key]
 	rm.RUnlock()
 	return result, ok
 }
 
-func scrape (currLink string, visited *SafeBoolMap, history *SafeStringMap, urlVisited *int, goal string, found *bool, parentGoal *[]string) ([]string){
+func scrape (currLink string, visited *SafeBoolMap, history *SafeStringMap, urlVisited *int, goal string, found *bool) ([]string){
 	tempQueue := []string{}
 	c := colly.NewCollector(
 		colly.AllowedDomains("en.wikipedia.org"),
@@ -127,10 +126,11 @@ func scrape (currLink string, visited *SafeBoolMap, history *SafeStringMap, urlV
 			if href == "/wiki/" + goal {
 				*found = true
 				// fmt.Println(currLink)
-				*parentGoal = append(*parentGoal, currLink)
-				if _, exists := history.Load(kode); !exists {
-					history.Store(kode, currLink)
-				}
+				// *parentGoal = append(*parentGoal, currLink)
+				history.Store(kode, currLink)
+				// if _, exists := history.Load(kode); !exists {
+				// }
+				return
 			} else {
 				if _, exists := history.Load(kode); !exists {
 					history.Store(kode, currLink)
@@ -146,8 +146,6 @@ func scrape (currLink string, visited *SafeBoolMap, history *SafeStringMap, urlV
 		fmt.Println("Error:", err)
 	})
 	
-	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
-	
 	c.Visit("https://en.wikipedia.org/wiki/" + currLink)
 
 	// fmt.Println(tempQueue)
@@ -156,9 +154,10 @@ func scrape (currLink string, visited *SafeBoolMap, history *SafeStringMap, urlV
 
 func main() {
 	var start string
-	var shortestPath [][]string
+	// var shortestPath [][]string
+	var shortestPath []string
 	var tempQueue []string
-	var parentGoal []string
+	// var parentGoal []string
 	var goal string
 	var queue []string
 	var parent string
@@ -174,41 +173,10 @@ func main() {
 
 	startTime := time.Now()
 
-	// c := colly.NewCollector(
-	// 	colly.AllowedDomains("en.wikipedia.org"),
-	// )
-
-	// c.OnRequest(func(r *colly.Request) {
-	// 	urlVisited++
-	// })
-
-	// c.OnHTML("div#mw-content-text a[href]", func(e *colly.HTMLElement) {
-	// 	href := e.Attr("href")
-	// 	if strings.HasPrefix(href, "/wiki/") && !checkIgnoredLink(href) {
-	// 		kode := href[6:]
-	// 		if href == "/wiki/"+goal {
-	// 			found = true
-	// 			history.Store(kode, currLink)
-	// 			e.Request.Abort()
-	// 		} else {
-	// 			if _, exists := history.Load(kode); !exists {
-	// 				history.Store(kode, currLink)
-	// 			}
-	// 			tempQueue = append(tempQueue, kode)
-	// 			visited.Store(kode, false)
-	// 		}
-	// 	}
-	// })
-
-	// c.OnError(func(r *colly.Response, err error) {
-	// 	fmt.Println("Request URL:", r.Request.URL.String())
-	// 	fmt.Println("Error:", err)
-	// })
-
 	tempQueueChan := make(chan []string)
 
 	go func() {
-		tempQueue := scrape(start, &visited, &history, &urlVisited, goal, &found, &parentGoal)
+		tempQueue := scrape(start, &visited, &history, &urlVisited, goal, &found)
 		tempQueueChan <- tempQueue
 	}()
 	tempQueue = <-tempQueueChan
@@ -226,11 +194,14 @@ func main() {
 			go func(link string) {
 				defer wg.Done()
 				if isVisited, _ := visited.Load(link); !isVisited {
-					tempQueue = append(tempQueue, scrape(link, &visited, &history, &urlVisited, goal, &found, &parentGoal)...)
+					tempQueue = append(tempQueue, scrape(link, &visited, &history, &urlVisited, goal, &found)...)
 					visited.Store(parent, true)
 				}
 				<-limiter
 			}(element)
+			if (found) {
+				break
+			}
 		}
 		wg.Wait()
 	}
@@ -239,12 +210,15 @@ func main() {
 	fmt.Println("Waktu eksekusi:", end.Sub(startTime))
 	fmt.Println("Url visited:", urlVisited)
 	if (found) {
-		for _, parent := range uniqueArray(parentGoal) {
-			shortestPath = append(shortestPath, getResult(history.SafeMap, parent, start, goal))
-		}
-		for _, path := range shortestPath {
-			fmt.Println(path)
-		}
+		fmt.Println(goal)
+		shortestPath = getResult(history.SafeMap, goal, start)
+		// for _, parent := range uniqueArray(parentGoal) {
+		// 	shortestPath = append(shortestPath, getResult(history.SafeMap, parent, start, goal))
+		// }
+		fmt.Println(shortestPath)
+		// for _, path := range shortestPath {
+		// 	fmt.Println(path)
+		// }
 	} else {
 		fmt.Println("Goal not found")
 	}
