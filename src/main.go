@@ -34,7 +34,7 @@ func main() {
 			targetURL = "https://en.wikipedia.org/wiki/" + convertToTitleCase(target)
 
 			// Panggil IDS
-			hasil, numOfArticles, found := IDSGoroutine(startURL, targetURL, maxDepth, &numOfArticles)
+			hasil, numOfArticles, found := IDS(startURL, targetURL, maxDepth, &numOfArticles)
 			//hasil, found := IDS(startURL, targetURL, maxDepth, &numOfArticles)
 			result := []string{startURL}
 			result = append(result, hasil...)
