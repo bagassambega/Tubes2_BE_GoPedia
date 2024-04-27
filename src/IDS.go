@@ -97,6 +97,7 @@ func IDSGoroutine(startURL, targetURL string, maxDepth int, numOfArticles *int) 
 	}(ch)
 	result = <-ch
 	linkCache = make(map[string][]string)
+	visited = make(map[string]bool)
 	return result, *numOfArticles, result != nil
 }
 
