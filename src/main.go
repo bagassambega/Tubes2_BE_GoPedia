@@ -32,7 +32,7 @@ func main() {
 			targetURL = "https://en.wikipedia.org/wiki/" + convertToTitleCase(target)
 
 			// Panggil IDS
-			hasil, numOfArticles, found := IDS2(startURL, targetURL)
+			hasil, numOfArticles, found := IDS(startURL, targetURL)
 			//hasil, found := IDS(startURL, targetURL, maxDepth, &numOfArticles)
 			result := []string{startURL}
 			result = append(result, hasil...)
@@ -58,6 +58,7 @@ func main() {
 			})
 
 		} else { // BFS
+			fmt.Println("Source", source, "Target", target)
 			var numOfArticles int
 
 			var elapsedTime time.Duration
@@ -80,11 +81,10 @@ func main() {
 				}
 			}
 
-			
 			for i, link := range result {
 				result[i] = strings.ReplaceAll(link, "_", " ")
 			}
-			
+
 			fmt.Println(result)
 			c.JSON(http.StatusOK, gin.H{
 				"numOfArticles": numOfArticles,
