@@ -80,3 +80,9 @@ Jika _build docker_ gagal atau menjalankan dengan _docker_ tidak berhasil, progr
 ```bash
 go run .
 ```
+
+**_NOTE:_**
+Kendala saat ini baik pada BFS dan IDS adalah terdapat maksimum _requests per second_ yang dibatasi oleh Wikipedia. Untuk terus memantau apakah program berjalan atau sudah diblokir oleh 
+Wikipedia, lihat log pada _terminal backend_. Untuk melakukan pengaturan terhadap banyak _thread_ yang digunaka, untuk algoritma BFS
+terdapat pada variabel limiter dengan nilai awal 200 di file ```BFS.go``` pada fungsi BFS, dan pada algoritma IDS terdapat pada variabel limiter dengan nilai awal 100 pada
+file ```IDS.go``` pada fungsi DLS. Nilai ini dapat diubah sesuai kebutuhan.

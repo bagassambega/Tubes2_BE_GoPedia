@@ -5,6 +5,7 @@ import (
 	"github.com/gocolly/colly/v2"
 	"strings"
 	"sync"
+	"time"
 )
 
 func getAllLinks(url string) []string {
@@ -101,7 +102,7 @@ func DLS(currentURL string, targetURL string, limit int, result []string, numOfA
 
 	wg := sync.WaitGroup{}
 	//fmt.Println("Panjang", len(links))
-	limiter := make(chan int, 200)
+	limiter := make(chan int, 400)
 
 	for _, link := range links {
 		wg.Add(1)
@@ -114,6 +115,9 @@ func DLS(currentURL string, targetURL string, limit int, result []string, numOfA
 				wg.Done()
 				<-limiter
 			}()
+			if limit >= 3 {
+				time.Sleep(time.Millisecond * 5)
+			}
 			*newPath, *found = DLS(link, targetURL, limit-1, append(result, link), numOfArticles, visited2, cache)
 		}(link, &found, &newPath)
 		wg.Wait()
