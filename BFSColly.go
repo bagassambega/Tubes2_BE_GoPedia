@@ -6,7 +6,7 @@ import (
 
 	"github.com/gocolly/colly/v2"
 
-	// "sync"
+	"sync"
 	"time"
 )
 
@@ -58,6 +58,42 @@ func getResult(history map[string]string, start string, goal string) []string {
 	return result
 }
 
+type SafeBoolMap struct {
+	sync.RWMutex
+	SafeMap map[string]bool
+}
+
+type SafeStringMap struct {
+	sync.RWMutex
+	SafeMap map[string]string
+}
+
+func (rm *SafeBoolMap) Store(key string, value bool) {
+	rm.Lock()
+	rm.SafeMap[key] = value
+	rm.Unlock()
+}
+
+func (rm *SafeBoolMap) Load(key string) (bool, bool){
+	rm.RLock()
+	result, ok := rm.SafeMap[key]
+	rm.RUnlock()
+	return result, ok
+}
+
+func (rm *SafeStringMap) Store(key string, value string) {
+	rm.Lock()
+	rm.SafeMap[key] = value
+	rm.Unlock()
+}
+
+func (rm *SafeStringMap) Load(key string) (string, bool){
+	rm.RLock()
+	result,ok  := rm.SafeMap[key]
+	rm.RUnlock()
+	return result, ok
+}
+
 func main() {
 	var start string
 	var shortestPath []string
@@ -67,9 +103,8 @@ func main() {
 	var parent string
 	urlVisited := 0
 	found := false
-	visited := make(map[string]bool)
-	history := make(map[string]string)
-	// var mutex sync.Mutex
+	visited := SafeBoolMap{SafeMap : make(map[string]bool)}
+	history := SafeStringMap{SafeMap : make(map[string]string)}
 
 	fmt.Print("Awal: ")
 	fmt.Scan(&start)
@@ -81,10 +116,10 @@ func main() {
 
 	c := colly.NewCollector(
 		colly.AllowedDomains("en.wikipedia.org"),
+		// colly.Async(true),
 	)
 
 	c.OnRequest(func(r *colly.Request) {
-		// fmt.Println(r.URL)
 		urlVisited++
 	})
 
@@ -94,20 +129,14 @@ func main() {
 			kode := href[6:]
 			if href == "/wiki/"+goal {
 				found = true
-				// mutex.Lock()
-				history[kode] = currLink
-				// mutex.Unlock()
+				history.Store(kode, currLink)
 				e.Request.Abort()
 			} else {
-				queue = append(queue, kode)
-				// mutex.Lock()
-				if _,exists := history[kode]; !exists {
-					history[kode] = currLink
+				if _, exists := history.Load(kode); !exists {
+					history.Store(kode, currLink)
+					queue = append(queue, kode)
 				}
-				// mutex.Unlock()
-				// mutex.Lock()
-				visited[kode] = false
-				// mutex.Unlock()
+				visited.Store(kode, false)
 			}
 		}
 	})
@@ -118,35 +147,34 @@ func main() {
 	})
 
 	// limiter := make(chan int, 200)
+	var wg sync.WaitGroup
 	for !found {
 		for _, element := range queue {
-			// limiter <- 1
-			// go func(link string) {
-			currLink = element
-			// mutex.Lock()
-			if !visited[currLink] {
-				c.Visit("https://en.wikipedia.org/wiki/" + currLink)
+			wg.Add(1)
+			go func(link string) {
+				defer wg.Done()
+				currLink = link
+				isVisited, _ := visited.Load(currLink)
+				if !isVisited {
+					c.Visit("https://en.wikipedia.org/wiki/" + currLink)
+				}
 				queue = HapusAntrian(queue, &parent)
-				// mutex.Lock()
-				visited[parent] = true
-				// mutex.Unlock()
-			}
-				// mutex.Unlock()
+				visited.Store(parent, true)
 				// <-limiter
-			// }(currLink)
+			}(element)
 			if found {
 				break
 			}
 		}
 	}
-	
+
 	end := time.Now()
 	fmt.Println("Waktu eksekusi", end.Sub(startTime))
 	fmt.Println("Url visited: ", urlVisited)
 	if found {
-		shortestPath = getResult(history, goal, start)
-		for _, X := range shortestPath {
-			fmt.Println(X)
+		shortestPath = getResult(history.SafeMap, start, goal)
+		for i := len(shortestPath) - 1; i >= 0; i-- {
+			fmt.Println(shortestPath[i])
 		}
 	} else {
 		fmt.Println("Goal not found")
